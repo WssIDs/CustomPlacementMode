@@ -82,10 +82,14 @@ void FCustomPlacementModeModule::StartupModule()
 
 	RegisterSettings();
 
+	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	//Custom properties
+	PropertyModule.RegisterCustomClassLayout("CustomPlacementModeSettings", FOnGetDetailCustomizationInstance::CreateStatic(&FSettingPlaceableCategoryItemCustomization::MakeInstance));
+
 	FEditorModeRegistry::Get().UnregisterMode(FBuiltinEditorModes::EM_Placement);
 
 	TArray< FString > RecentlyPlacedAsStrings;
-	GConfig->GetArray(TEXT("CustomPlacementMode"), TEXT("RecentlyPlaced"), RecentlyPlacedAsStrings, GEditorPerProjectIni);
+	GConfig->GetArray(TEXT("PlacementMode"), TEXT("RecentlyPlaced"), RecentlyPlacedAsStrings, GEditorPerProjectIni);
 
 	for (int Index = 0; Index < RecentlyPlacedAsStrings.Num(); Index++)
 	{
@@ -100,50 +104,57 @@ void FCustomPlacementModeModule::StartupModule()
 
 	TOptional<FLinearColor> BasicShapeColorOverride = GetBasicShapeColorOverride();
 
+	UCustomPlacementModeSettings* Settings = UCustomPlacementModeSettings::Get();
 
-	RegisterPlacementCategory(
-		FCustomPlacementCategoryInfo(
-			NSLOCTEXT("CustomPlacementMode", "RecentlyPlaced", "Recently Placed"),
-			FCustomBuiltInPlacementCategories::RecentlyPlaced(),
-			TEXT("PMRecentlyPlaced"),
-			TNumericLimits<int32>::Lowest(),
-			false
-		)
-	);
 
+	if(Settings->RecentlyPlaced.bVisible)
 	{
-		int32 SortOrder = 0;
-		FName CategoryName = FCustomBuiltInPlacementCategories::Basic();
 		RegisterPlacementCategory(
 			FCustomPlacementCategoryInfo(
-				NSLOCTEXT("CustomPlacementMode", "Basic", "Basic"),
-				CategoryName,
-				TEXT("PMBasic"),
-				10
+				NSLOCTEXT("CustomPlacementMode", "RecentlyPlaced", "Recently Placed"),
+				FCustomBuiltInPlacementCategories::RecentlyPlaced(),
+				TEXT("PMRecentlyPlaced"),
+				TNumericLimits<int32>::Lowest(),
+				false
 			)
 		);
-
-		FCustomPlacementCategory* Category = Categories.Find(CategoryName);
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryEmptyActor::StaticClass(), SortOrder += 10)));
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryCharacter::StaticClass(), SortOrder += 10)));
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPawn::StaticClass(), SortOrder += 10)));
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPointLight::StaticClass(), SortOrder += 10)));
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPlayerStart::StaticClass(), SortOrder += 10)));
-		// Cube
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCube.ToString())), FName("ClassThumbnail.Cube"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cube", "Cube"))));
-		// Sphere
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicSphere.ToString())), FName("ClassThumbnail.Sphere"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Sphere", "Sphere"))));
-		// Cylinder
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCylinder.ToString())), FName("ClassThumbnail.Cylinder"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cylinder", "Cylinder"))));
-		// Cone
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCone.ToString())), FName("ClassThumbnail.Cone"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cone", "Cone"))));
-		// Plane
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicPlane.ToString())), FName("ClassThumbnail.Plane"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Plane", "Plane"))));
-
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryTriggerBox::StaticClass(), SortOrder += 10)));
-		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryTriggerSphere::StaticClass(), SortOrder += 10)));
 	}
 
+	if(Settings->Basic.bVisible)
+	{
+			int32 SortOrder = 0;
+			FName CategoryName = FCustomBuiltInPlacementCategories::Basic();
+			RegisterPlacementCategory(
+				FCustomPlacementCategoryInfo(
+					NSLOCTEXT("CustomPlacementMode", "Basic", "Basic"),
+					CategoryName,
+					TEXT("PMBasic"),
+					10
+				)
+			);
+
+			FCustomPlacementCategory* Category = Categories.Find(CategoryName);
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryEmptyActor::StaticClass(), SortOrder += 10)));
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryCharacter::StaticClass(), SortOrder += 10)));
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPawn::StaticClass(), SortOrder += 10)));
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPointLight::StaticClass(), SortOrder += 10)));
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryPlayerStart::StaticClass(), SortOrder += 10)));
+			// Cube
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCube.ToString())), FName("ClassThumbnail.Cube"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cube", "Cube"))));
+			// Sphere
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicSphere.ToString())), FName("ClassThumbnail.Sphere"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Sphere", "Sphere"))));
+			// Cylinder
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCylinder.ToString())), FName("ClassThumbnail.Cylinder"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cylinder", "Cylinder"))));
+			// Cone
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicCone.ToString())), FName("ClassThumbnail.Cone"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Cone", "Cone"))));
+			// Plane
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryBasicShape::StaticClass(), FAssetData(LoadObject<UStaticMesh>(nullptr, *UActorFactoryBasicShape::BasicPlane.ToString())), FName("ClassThumbnail.Plane"), BasicShapeColorOverride, SortOrder += 10, NSLOCTEXT("PlacementMode", "Plane", "Plane"))));
+
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryTriggerBox::StaticClass(), SortOrder += 10)));
+			Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryTriggerSphere::StaticClass(), SortOrder += 10)));
+	}
+
+	if(Settings->Lights.bVisible)
 	{
 		int32 SortOrder = 0;
 		FName CategoryName = FCustomBuiltInPlacementCategories::Lights();
@@ -166,6 +177,7 @@ void FCustomPlacementModeModule::StartupModule()
 		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactorySkyLight::StaticClass(), SortOrder += 10)));
 	}
 
+	if(Settings->Visual.bVisible)
 	{
 		int32 SortOrder = 0;
 		FName CategoryName = FCustomBuiltInPlacementCategories::Visual();
@@ -190,30 +202,33 @@ void FCustomPlacementModeModule::StartupModule()
 		Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(*UActorFactoryDeferredDecal::StaticClass(), SortOrder += 10)));
 	}
 
-	RegisterPlacementCategory(
-		FCustomPlacementCategoryInfo(
-			NSLOCTEXT("CustomPlacementMode", "Volumes", "Volumes"),
-			FCustomBuiltInPlacementCategories::Volumes(),
-			TEXT("PMVolumes"),
-			40
-		)
-	);
+	if (Settings->Volumes.bVisible)
+	{
+		RegisterPlacementCategory(
+			FCustomPlacementCategoryInfo(
+				NSLOCTEXT("CustomPlacementMode", "Volumes", "Volumes"),
+				FCustomBuiltInPlacementCategories::Volumes(),
+				TEXT("PMVolumes"),
+				40
+			)
+		);
+	}
 
-	RegisterPlacementCategory(
-		FCustomPlacementCategoryInfo(
-			NSLOCTEXT("CustomPlacementMode", "AllClasses", "All Classes"),
-			FCustomBuiltInPlacementCategories::AllClasses(),
-			TEXT("PMAllClasses"),
-			50
-		)
-	);
-
-
-	UCustomPlacementModeSettings* Settings = GetMutableDefault<UCustomPlacementModeSettings>();
+	if (Settings->AllClasses.bVisible)
+	{
+		RegisterPlacementCategory(
+			FCustomPlacementCategoryInfo(
+				NSLOCTEXT("CustomPlacementMode", "AllClasses", "All Classes"),
+				FCustomBuiltInPlacementCategories::AllClasses(),
+				TEXT("PMAllClasses"),
+				50
+			)
+		);
+	}
 
 	if (Settings)
 	{
-
+		/*
 		for (auto& SettingItem : Settings->PlaceableCategoryItems)
 		{
 			FName HandleName = SettingItem.CategoryName;
@@ -227,6 +242,20 @@ void FCustomPlacementModeModule::StartupModule()
 
 			CustomCategories.Add(Item);
 		}
+		*/
+		for (auto& SettingItem : Settings->PlaceableCategoryItems)
+		{
+			FName HandleName = SettingItem.CategoryName;
+			FName DisplayName = HandleName;
+
+			FString PrefixTag = TEXT("PM");
+			FString TagName = PrefixTag.Append(HandleName.ToString());
+
+			FCategoryItem Item = FCategoryItem(HandleName, DisplayName, TagName);
+			Item.Items = SettingItem.Items;
+
+			CustomCategories.Add(Item);
+		}		
 
 		int32 Sort = 60;
 		for (const FCategoryItem& Category : CustomCategories)
@@ -623,6 +652,8 @@ void FCustomPlacementModeModule::RefreshAllPlaceableClasses()
 
 void FCustomPlacementModeModule::RefreshAllCustomClasses()
 {
+	UCustomPlacementModeSettings* Settings = GetMutableDefault<UCustomPlacementModeSettings>();
+	
 	for (auto& CategoryItem : CustomCategories)
 	{
 		FName CategoryName = CategoryItem.HandleName;
@@ -636,82 +667,106 @@ void FCustomPlacementModeModule::RefreshAllCustomClasses()
 
 		Category->Items.Reset();
 
-		// Make a map of UClasses to ActorFactories that support them
-		const TArray< UActorFactory *>& ActorFactories = GEditor->ActorFactories;
-		TMap<UClass*, UActorFactory*> ActorFactoryMap;
-		for (int32 FactoryIdx = 0; FactoryIdx < ActorFactories.Num(); ++FactoryIdx)
+		FSettingPlaceableCategoryItem* SettingCategoryItem = Settings->PlaceableCategoryItems.FindByPredicate([CategoryName](const FSettingPlaceableCategoryItem& Item)
 		{
-			UActorFactory* ActorFactory = ActorFactories[FactoryIdx];
+			return Item.CategoryName == CategoryName;
+		});
 
-			if (ActorFactory)
-			{
-				ActorFactoryMap.Add(ActorFactory->GetDefaultActorClass(FAssetData()), ActorFactory);
-			}
-		}
-
-		FAssetData NoAssetData;
-		FText UnusedErrorMessage;
-
-		// Add loaded classes
-		for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+		if (SettingCategoryItem && SettingCategoryItem->bUseBlueprintClasses)
 		{
-			// Don't offer skeleton classes
-			bool bIsSkeletonClass = FKismetEditorUtilities::IsClassABlueprintSkeleton(*ClassIt);
-
-			for (auto& Elem : CategoryItem.Items)
-			{
-				if (!ClassIt->HasAllClassFlags(CLASS_NotPlaceable) &&
-					!ClassIt->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists) &&
-					ClassIt->IsChildOf(Elem) && !bIsSkeletonClass /*&& ClassIt->IsNative() */
-					)
-				{
-					UActorFactory* ActorFactory = ActorFactoryMap.FindRef(*ClassIt);
-
-					if (ActorFactory && !ActorFactory->CanCreateActorFrom(NoAssetData, UnusedErrorMessage))
-					{
-						continue;
-					}
-
-					Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(ActorFactory, FAssetData(*ClassIt))));
-				}
-			}
-		}
-
-		UCustomPlacementModeSettings* Settings = GetMutableDefault<UCustomPlacementModeSettings>();
-
-		if (Settings->bUseBlueprintChildClasses)
-		{
-
 			BPItems = RefreshAllCustomClassesWithBlueprint(CategoryItem);
 
 			UE_LOG(CustomPlacementModeSettingLog, Log, TEXT("Update Category - %s"), *Category->UniqueHandle.ToString());
 			for (int32 i = 0; i < BPItems.Num(); i++)
 			{
 				TSoftClassPtr<AActor> Item = BPItems[i];
+				//UClass* Class = LoadClass<AActor>(NULL, *Item->GetPathName());
+				UAssetManager::GetStreamableManager().RequestAsyncLoad(Item.ToSoftObjectPath(), FStreamableDelegate::CreateRaw(this, &FCustomPlacementModeModule::AddBPItemsToCategory, Item, Category), 100, true);
+			}
+			
+			// Make a map of UClasses to ActorFactories that support them
+			const TArray< UActorFactory *>& ActorFactories = GEditor->ActorFactories;
+			TMap<UClass*, UActorFactory*> ActorFactoryMap;
+			for (int32 FactoryIdx = 0; FactoryIdx < ActorFactories.Num(); ++FactoryIdx)
+			{
+				UActorFactory* ActorFactory = ActorFactories[FactoryIdx];
 
-				//CategoryClass = Item;
-				//CategoryItemsToStream.AddUnique(Item.ToSoftObjectPath());
-				//UClass* BPClass = AssetLoader->SynchronousLoad(Item);
-				UClass* BPClass = Item.LoadSynchronous();
-				//UAssetManager::GetStreamableManager().LoadSynchronous(Item.ToSoftObjectPath());
-				//UAssetManager::GetStreamableManager().RequestAsyncLoad(Item.ToSoftObjectPath(),FStreamableDelegate::CreateRaw(this,&FCustomPlacementModeModule::AddBPItemsToCategory,Item,Category),100,true);			
-				//AssetLoader->RequestAsyncLoad(Item.ToSoftObjectPath(),FStreamableDelegate::CreateRaw(this, &FCustomPlacementModeModule::AddBPItemsToCategory),100,true);
-				//UClass* BPClass = Item.Get();
-
-				if (BPClass)
+				if (ActorFactory)
 				{
-					if (!BPClass->HasAllClassFlags(CLASS_NotPlaceable))
-					{
-						UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(BPClass);
-						Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(ActorFactory, FAssetData(BPClass))));
-
-						UE_LOG(CustomPlacementModeSettingLog, Log, TEXT("[%d] Asset AddedToCategory - %s"), i, *BPClass->GetName());
-					}
+					ActorFactoryMap.Add(ActorFactory->GetDefaultActorClass(FAssetData()), ActorFactory);
 				}
-				//AssetLoader->Unload(Item.ToSoftObjectPath());
 			}
 
-			//StreamHandle = AssetLoader->RequestAsyncLoad(CategoryItemsToStream, FStreamableDelegate::CreateRaw(this, &FCustomPlacementModeModule::AddBPItemsToCategory));
+			FAssetData NoAssetData;
+			FText UnusedErrorMessage;
+
+			// Add loaded classes
+			for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+			{
+				// Don't offer skeleton classes
+				bool bIsSkeletonClass = FKismetEditorUtilities::IsClassABlueprintSkeleton(*ClassIt);
+
+				for (auto& Elem : CategoryItem.Items)
+				{
+					if (!ClassIt->HasAllClassFlags(CLASS_NotPlaceable) &&
+						!ClassIt->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists) &&
+						ClassIt->IsChildOf(Elem) && !bIsSkeletonClass /*&& ClassIt->IsNative()*/
+						)
+					{
+						UActorFactory* ActorFactory = ActorFactoryMap.FindRef(*ClassIt);
+
+						if (ActorFactory && !ActorFactory->CanCreateActorFrom(NoAssetData, UnusedErrorMessage))
+						{
+							continue;
+						}
+
+						Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(ActorFactory, FAssetData(*ClassIt))));
+					}
+				}
+			}
+		}
+		else
+		{
+			// Make a map of UClasses to ActorFactories that support them
+			const TArray< UActorFactory *>& ActorFactories = GEditor->ActorFactories;
+			TMap<UClass*, UActorFactory*> ActorFactoryMap;
+			for (int32 FactoryIdx = 0; FactoryIdx < ActorFactories.Num(); ++FactoryIdx)
+			{
+				UActorFactory* ActorFactory = ActorFactories[FactoryIdx];
+
+				if (ActorFactory)
+				{
+					ActorFactoryMap.Add(ActorFactory->GetDefaultActorClass(FAssetData()), ActorFactory);
+				}
+			}
+
+			FAssetData NoAssetData;
+			FText UnusedErrorMessage;
+
+			// Add loaded classes
+			for (TObjectIterator<UClass> ClassIt; ClassIt; ++ClassIt)
+			{
+				// Don't offer skeleton classes
+				bool bIsSkeletonClass = FKismetEditorUtilities::IsClassABlueprintSkeleton(*ClassIt);
+
+				for (auto& Elem : CategoryItem.Items)
+				{
+					if (!ClassIt->HasAllClassFlags(CLASS_NotPlaceable) &&
+						!ClassIt->HasAnyClassFlags(CLASS_Abstract | CLASS_Deprecated | CLASS_NewerVersionExists) &&
+						ClassIt->IsChildOf(Elem) && !bIsSkeletonClass && ClassIt->IsNative()
+						)
+					{
+						UActorFactory* ActorFactory = ActorFactoryMap.FindRef(*ClassIt);
+
+						if (ActorFactory && !ActorFactory->CanCreateActorFrom(NoAssetData, UnusedErrorMessage))
+						{
+							continue;
+						}
+
+						Category->Items.Add(CreateID(), MakeShareable(new FCustomPlaceableItem(ActorFactory, FAssetData(*ClassIt))));
+					}
+				}
+			}
 		}
 	}
 
@@ -785,7 +840,7 @@ void FCustomPlacementModeModule::RefreshAllCustomClasses(FName CategoryName)
 				//UClass* BPClass = Item.LoadSynchronous();
 				//AssetLoader->SimpleAsyncLoad(Item.ToSoftObjectPath());
 
-				UAssetManager::GetStreamableManager().RequestAsyncLoad(Item.ToSoftObjectPath(),FStreamableDelegate::CreateRaw(this,&FCustomPlacementModeModule::AddBPItemsToCategory,Item,Category));
+				//UAssetManager::GetStreamableManager().RequestAsyncLoad(Item.ToSoftObjectPath(),FStreamableDelegate::CreateRaw(this,&FCustomPlacementModeModule::AddBPItemsToCategory,Item,Category));
 				
 
 				//UAssetManager::GetStreamableManager().SynchronousLoad(Item.ToSoftObjectPath());
@@ -813,9 +868,10 @@ void FCustomPlacementModeModule::RefreshAllCustomClasses(FName CategoryName)
 
 void FCustomPlacementModeModule::AddBPItemsToCategory(TSoftClassPtr<AActor> Reference, FCustomPlacementCategory* Category)
 {	
-	UE_LOG(CustomPlacementModeModuleLog,Log,TEXT("Category - %s"), *Category->UniqueHandle.ToString());		
-	UE_LOG(CustomPlacementModeModuleLog,Log,TEXT("AssetsLoaded - %s"), *Reference.ToString());	
+	UE_LOG(CustomPlacementModeModuleLog,Log,TEXT("Category - %s"), *Category->UniqueHandle.ToString());
+	UE_LOG(CustomPlacementModeModuleLog,Log,TEXT("AssetsLoaded - %s"), *Reference.ToString());
 	
+	/*
 	UClass* BPClass = Reference.Get();	
 	
 	if (BPClass)
@@ -831,7 +887,7 @@ void FCustomPlacementModeModule::AddBPItemsToCategory(TSoftClassPtr<AActor> Refe
 	}	
 	
 	UE_LOG(CustomPlacementModeModuleLog,Log,TEXT("Category - %s"), *Category->UniqueHandle.ToString());	
-
+	*/
 	//CategoryItemsToStream.Empty();
 	//BPItems.Empty();
 }
@@ -891,7 +947,6 @@ TArray<TAssetSubclassOf<AActor>> FCustomPlacementModeModule::RefreshAllCustomCla
 
 			TArray< FAssetData > AssetList;
 			AssetRegistry.GetAssets(Filter, AssetList);
-
 
 			// Iterate over retrieved blueprint assets
 			for (auto const& Asset : AssetList)

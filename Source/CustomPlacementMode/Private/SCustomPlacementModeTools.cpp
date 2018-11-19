@@ -338,13 +338,29 @@ void SCustomPlacementModeTools::Construct(const FArguments& InArgs)
 	{
 		if (IsCutomCategory(Category))
 		{
-			if(Settings->bUseCustomColorCategories)
+			FSettingPlaceableCategoryItem* SettingCategoryItem = Settings->PlaceableCategoryItems.FindByPredicate([Category](const FSettingPlaceableCategoryItem& Item)
 			{
-				Tabs->AddSlot()
-					.AutoHeight()
-					[
-						CreateCustomPlacementGroupTab(Category)
-					];
+				return Item.CategoryName == Category.UniqueHandle;
+			});
+			
+			if(SettingCategoryItem)
+			{
+				if(SettingCategoryItem->bUseCustomColorCategories)
+				{
+					Tabs->AddSlot()
+						.AutoHeight()
+						[
+							CreateCustomPlacementGroupTab(Category)
+						];
+				}
+				else
+				{
+					Tabs->AddSlot()
+						.AutoHeight()
+						[
+							CreatePlacementGroupTab(Category)
+						];
+				}
 			}
 			else
 			{

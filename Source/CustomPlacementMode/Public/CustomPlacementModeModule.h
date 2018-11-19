@@ -153,7 +153,7 @@ public:
 	// Callback for when the settings were saved.
 	bool HandleSettingsSaved()
 	{
-		UCustomPlacementModeSettings* Settings = GetMutableDefault<UCustomPlacementModeSettings>();
+		UCustomPlacementModeSettings* Settings = UCustomPlacementModeSettings::Get();
 		bool ResaveSettings = false;
 
 		// You can put any validation code in here and resave the settings in case an invalid
@@ -223,6 +223,8 @@ private:
 	TArray<TAssetSubclassOf<AActor>> RefreshAllCustomClassesWithBlueprint(FCategoryItem CategoryItem);
 	TArray<TAssetSubclassOf<AActor>> RefreshAllCustomClassesWithBlueprint(FName CategoryName);
 	TArray<TAssetSubclassOf<AActor>> RefreshAllClassesWithBlueprint();
+	
+	void TestGetBPClasses();
 
 	void  AddBPItemsToCategory(TSoftClassPtr<AActor> Reference, FCustomPlacementCategory* Category);
 	FGuid CreateID();

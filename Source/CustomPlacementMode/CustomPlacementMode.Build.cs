@@ -17,12 +17,14 @@ namespace UnrealBuildTool.Rules
                     "CoreUObject",
                     "InputCore",
                     "Engine",
-                    "Settings"
+                    "Settings",
+                    "ClassViewer"
                 }
 			);
 
 			PrivateDependencyModuleNames.AddRange(
 				new string[] {
+					"APPFRAMEWORK",
                     "Slate",
                     "SlateCore",
                     "PropertyEditor",

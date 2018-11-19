@@ -135,6 +135,7 @@ FCustomCategoryStyle::FCustomCoreStyle::FCustomCoreStyle(const TWeakObjectPtr< U
 	, AllClassesTextShadow(AllClassesTextShadow_LinearRef)
 	, Settings(InSettings)
 {
+	/*
 	if(InSettings->PlaceableCategoryItems.Num() > 0)
 	{
 		for (auto& Elem : InSettings->PlaceableCategoryItems)
@@ -160,6 +161,33 @@ FCustomCategoryStyle::FCustomCoreStyle::FCustomCoreStyle(const TWeakObjectPtr< U
 			}
 		}
 	}
+	*/
+	
+	if(InSettings->PlaceableCategoryItems.Num() > 0)
+	{
+		for (auto& Elem : InSettings->PlaceableCategoryItems)
+		{
+			CustomForeground_LinearRefs.Add(MakeShareable(new FLinearColor(0.1f, 0.1f, 0.1f, 0.08f)));
+			CustomSelectionColor_LinearRefs.Add(MakeShareable(new FLinearColor(0.03f, 0.03f, 0.03f, 1.0f)));
+			CustomSelectionColor_Pressed_LinearRefs.Add(MakeShareable(new FLinearColor(0.02f, 0.02f, 0.02f, 1.0f)));
+			CustomTextColor_LinearRefs.Add(MakeShareable(new FLinearColor(1.0f, 1.0f, 1.0f, 0.9f)));
+			CustomTextShadowColor_LinearRefs.Add(MakeShareable(new FLinearColor(0.0f, 0.0f, 0.0f, 0.9f)));
+		}
+
+		if(CustomForeground_LinearRefs.Num() > 0 &&
+			CustomSelectionColor_LinearRefs.Num() > 0 &&
+			CustomSelectionColor_Pressed_LinearRefs.Num() > 0)
+		{
+			for ( int i = 0; i < InSettings->PlaceableCategoryItems.Num(); i++)
+			{
+				CustomForegrounds.Add(CustomForeground_LinearRefs[i]);
+				CustomSelectionColors.Add(CustomSelectionColor_LinearRefs[i]);
+				CustomSelectionColors_Pressed.Add(CustomSelectionColor_Pressed_LinearRefs[i]);
+				CustomTextColors.Add(CustomTextColor_LinearRefs[i]);
+				CustomTextShadowColors.Add(CustomTextShadowColor_LinearRefs[i]);
+			}
+		}
+	}	
 }
 
 void SetColor(const TSharedRef< FLinearColor >& Source, const FLinearColor& Value)
@@ -223,7 +251,7 @@ void FCustomCategoryStyle::FCustomCoreStyle::SyncSettings()
 		TArray< FLinearColor > Selections_Pressed;
 		TArray< FLinearColor > TextColors;
 		TArray< FLinearColor > TextShadowColors;
-
+		/*
 		if(Settings->PlaceableCategoryItems.Num() > 0)
 		{
 			if(Settings->PlaceableCategoryItems.Num() == CustomForeground_LinearRefs.Num())
@@ -247,6 +275,31 @@ void FCustomCategoryStyle::FCustomCoreStyle::SyncSettings()
 				}
 			}
 		}
+		*/
+		if(Settings->PlaceableCategoryItems.Num() > 0)
+		{
+			if(Settings->PlaceableCategoryItems.Num() == CustomForeground_LinearRefs.Num())
+			{
+				for (auto& Elem : Settings->PlaceableCategoryItems)
+				{
+					Backgrounds.Add(Elem.ColorSetting.BackgroundColor);
+					Selections.Add(Elem.ColorSetting.HoveredColor);
+					Selections_Pressed.Add(Elem.ColorSetting.PressedSelectionColor);
+					TextColors.Add(Elem.ColorSetting.TextColor);
+					TextShadowColors.Add(Elem.ColorSetting.TextShadowColor);
+				}
+
+				for (int i = 0; i < Settings->PlaceableCategoryItems.Num(); i++)
+				{
+					SetColor(CustomForeground_LinearRefs[i], Backgrounds[i]);
+					SetColor(CustomSelectionColor_LinearRefs[i], Selections[i]);
+					SetColor(CustomSelectionColor_Pressed_LinearRefs[i], Selections_Pressed[i]);
+					SetColor(CustomTextColor_LinearRefs[i], TextColors[i]);
+					SetColor(CustomTextShadowColor_LinearRefs[i], TextShadowColors[i]);
+				}
+			}
+		}		
+		
 	}
 }
 
@@ -404,7 +457,45 @@ void FCustomCategoryStyle::FCustomCoreStyle::SetupCustomCategoryStyles()
 		.SetShadowColorAndOpacity(AllClassesTextShadow.GetSpecifiedColor()));
 
 	TArray< FName > Categories;
+	/*
+	if(Settings->PlaceableCategoryItems.Num() > 0)
+	{
+		for (auto& Elem : Settings->PlaceableCategoryItems)
+		{
+			FName Item = Elem.CategoryName;
 
+			Categories.Add(Item);
+		}
+
+		int i = 0;
+		for (auto& Elem : Settings->PlaceableCategoryItems)
+		{
+			FString Tab = TEXT("CustomPlacementBrowser.Tab");
+			FName PlacementTab = FName(*Tab.Append(Categories[i].ToString()));
+
+			FString TabText = TEXT("CustomPlacementBrowser.Tab.Text");
+			FName PlacementTabText = FName(*TabText.Append(Categories[i].ToString()));
+
+			Set(PlacementTab, FCheckBoxStyle()
+				.SetCheckBoxType(ESlateCheckBoxType::ToggleButton)
+				.SetUncheckedImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomForegrounds[i]))
+				.SetUncheckedPressedImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomSelectionColors_Pressed[i])) // TabActive
+				.SetUncheckedHoveredImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomSelectionColors[i]))
+				.SetCheckedImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomSelectionColors_Pressed[i])) // TabActive
+				.SetCheckedHoveredImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomSelectionColors_Pressed[i])) // TabActive
+				.SetCheckedPressedImage(BOX_BRUSH("Common/Selection", 8.0f / 32.0f, CustomSelectionColors_Pressed[i])) // TabActive
+				.SetPadding(0));
+
+			Set(PlacementTabText, FTextBlockStyle(NormalText)
+				.SetFont(DEFAULT_FONT("Bold", 10))
+				.SetColorAndOpacity(CustomTextColors[i])
+				.SetShadowOffset(FVector2D(1, 1))
+				.SetShadowColorAndOpacity(CustomTextShadowColors[i].GetSpecifiedColor()));
+				
+			i++;
+		}
+	}
+	*/
 	if(Settings->PlaceableCategoryItems.Num() > 0)
 	{
 		for (auto& Elem : Settings->PlaceableCategoryItems)
